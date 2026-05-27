@@ -14,9 +14,9 @@ public class Main {
         INotaFiscalDao notaDao    = new NotaFiscalDaoImpl();
 
         // --- CADASTROS ---
-        Cliente cliente = new Cliente("Bruce Lima", "123.456.789-00", "bruce@email.com");
-        Produto p1      = new Produto("Teclado Mecânico", 350.00);
-        Produto p2      = new Produto("Mouse Gamer", 180.00);
+        Cliente cliente = new Cliente("Bruce Lima", "123.456.789-00", "bruce@email.com", "(19) 99999-8888");
+        Produto p1      = new Produto("Teclado Mecânico", 350.00, "Redragon");
+        Produto p2      = new Produto("Mouse Gamer", 180.00, "Logitech");
 
         System.out.println(clienteDao.salvar(cliente));
         System.out.println(produtoDao.salvar(p1));

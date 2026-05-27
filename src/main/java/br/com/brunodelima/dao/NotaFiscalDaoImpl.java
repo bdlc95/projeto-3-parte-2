@@ -51,7 +51,6 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
 
     @Override
     public String excluir(String numero) {
-        // exclui os produtos da nota primeiro (chave estrangeira)
         String sqlProdutos = "DELETE FROM nota_fiscal_produto WHERE nota_fiscal_id = " +
                 "(SELECT id FROM nota_fiscal WHERE numero = ?)";
         String sqlNota     = "DELETE FROM nota_fiscal WHERE numero = ?";
@@ -86,8 +85,8 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
     public NotaFiscal buscarPorNumero(String numero) {
         String sql = """
                 SELECT nf.numero,
-                       c.nome AS cliente_nome, c.cpf, c.email,
-                       p.nome AS produto_nome, p.preco
+                       c.nome AS cliente_nome, c.cpf, c.email, c.telefone,
+                       p.nome AS produto_nome, p.preco, p.marca
                 FROM nota_fiscal nf
                 JOIN cliente c ON c.id = nf.cliente_id
                 JOIN nota_fiscal_produto nfp ON nfp.nota_fiscal_id = nf.id
@@ -109,13 +108,15 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
                     Cliente cliente = new Cliente(
                             rs.getString("cliente_nome"),
                             rs.getString("cpf"),
-                            rs.getString("email")
+                            rs.getString("email"),
+                            rs.getString("telefone")
                     );
                     nota = new NotaFiscal(numero, cliente, produtos);
                 }
                 produtos.add(new Produto(
                         rs.getString("produto_nome"),
-                        rs.getDouble("preco")
+                        rs.getDouble("preco"),
+                        rs.getString("marca")
                 ));
             }
 
@@ -133,8 +134,8 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
         List<NotaFiscal> notas = new ArrayList<>();
         String sql = """
                 SELECT nf.numero,
-                       c.nome AS cliente_nome, c.cpf, c.email,
-                       p.nome AS produto_nome, p.preco
+                       c.nome AS cliente_nome, c.cpf, c.email, c.telefone,
+                       p.nome AS produto_nome, p.preco, p.marca
                 FROM nota_fiscal nf
                 JOIN cliente c ON c.id = nf.cliente_id
                 JOIN nota_fiscal_produto nfp ON nfp.nota_fiscal_id = nf.id
@@ -159,7 +160,8 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
                     Cliente cliente = new Cliente(
                             rs.getString("cliente_nome"),
                             rs.getString("cpf"),
-                            rs.getString("email")
+                            rs.getString("email"),
+                            rs.getString("telefone")
                     );
                     produtosAtuais = new ArrayList<>();
                     notaAtual = new NotaFiscal(numero, cliente, produtosAtuais);
@@ -168,7 +170,8 @@ public class NotaFiscalDaoImpl implements INotaFiscalDao {
 
                 produtosAtuais.add(new Produto(
                         rs.getString("produto_nome"),
-                        rs.getDouble("preco")
+                        rs.getDouble("preco"),
+                        rs.getString("marca")
                 ));
             }
 

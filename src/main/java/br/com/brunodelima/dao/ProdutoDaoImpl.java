@@ -11,15 +11,30 @@ public class ProdutoDaoImpl implements IProdutoDao {
 
     @Override
     public String salvar(Produto produto) {
-        String sql = "INSERT INTO produto (nome, preco) VALUES (?, ?)";
+        String sqlProduto = "INSERT INTO produto (nome, preco, marca) VALUES (?, ?, ?) RETURNING id";
+        String sqlEstoque = "INSERT INTO estoque (produto_id, quantidade) VALUES (?, 0)";
 
-        try (Connection conn = ConexaoBanco.obterConexao();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoBanco.obterConexao()) {
 
-            stmt.setString(1, produto.getNome());
-            stmt.setDouble(2, produto.getPreco());
-            stmt.executeUpdate();
+            conn.setAutoCommit(false);
 
+            int produtoId;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlProduto)) {
+                stmt.setString(1, produto.getNome());
+                stmt.setDouble(2, produto.getPreco());
+                stmt.setString(3, produto.getMarca());
+                ResultSet rs = stmt.executeQuery();
+                rs.next();
+                produtoId = rs.getInt("id");
+            }
+
+            // toda vez que cadastrar produto, já entra no estoque com quantidade 0
+            try (PreparedStatement stmt = conn.prepareStatement(sqlEstoque)) {
+                stmt.setInt(1, produtoId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
             return "Produto salvo com sucesso: " + produto.getNome();
 
         } catch (SQLException e) {
@@ -30,7 +45,7 @@ public class ProdutoDaoImpl implements IProdutoDao {
     @Override
     public List<Produto> listarTodos() {
         List<Produto> produtos = new ArrayList<>();
-        String sql = "SELECT nome, preco FROM produto";
+        String sql = "SELECT nome, preco, marca FROM produto";
 
         try (Connection conn = ConexaoBanco.obterConexao();
              Statement stmt = conn.createStatement();
@@ -39,7 +54,8 @@ public class ProdutoDaoImpl implements IProdutoDao {
             while (rs.next()) {
                 produtos.add(new Produto(
                         rs.getString("nome"),
-                        rs.getDouble("preco")
+                        rs.getDouble("preco"),
+                        rs.getString("marca")
                 ));
             }
 

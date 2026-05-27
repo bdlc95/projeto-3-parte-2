@@ -11,7 +11,7 @@ public class ClienteDaoImpl implements IClienteDao {
 
     @Override
     public String salvar(Cliente cliente) {
-        String sql = "INSERT INTO cliente (nome, cpf, email) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO cliente (nome, cpf, email, telefone) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = ConexaoBanco.obterConexao();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -19,6 +19,7 @@ public class ClienteDaoImpl implements IClienteDao {
             stmt.setString(1, cliente.getNome());
             stmt.setString(2, cliente.getCpf());
             stmt.setString(3, cliente.getEmail());
+            stmt.setString(4, cliente.getTelefone());
             stmt.executeUpdate();
 
             return "Cliente salvo com sucesso: " + cliente.getNome();
@@ -30,14 +31,15 @@ public class ClienteDaoImpl implements IClienteDao {
 
     @Override
     public String atualizar(Cliente cliente) {
-        String sql = "UPDATE cliente SET nome = ?, email = ? WHERE cpf = ?";
+        String sql = "UPDATE cliente SET nome = ?, email = ?, telefone = ? WHERE cpf = ?";
 
         try (Connection conn = ConexaoBanco.obterConexao();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cliente.getNome());
             stmt.setString(2, cliente.getEmail());
-            stmt.setString(3, cliente.getCpf());
+            stmt.setString(3, cliente.getTelefone());
+            stmt.setString(4, cliente.getCpf());
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) return "Nenhum cliente encontrado com CPF: " + cliente.getCpf();
@@ -68,7 +70,7 @@ public class ClienteDaoImpl implements IClienteDao {
 
     @Override
     public Cliente buscarPorCpf(String cpf) {
-        String sql = "SELECT nome, cpf, email FROM cliente WHERE cpf = ?";
+        String sql = "SELECT nome, cpf, email, telefone FROM cliente WHERE cpf = ?";
 
         try (Connection conn = ConexaoBanco.obterConexao();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -80,7 +82,8 @@ public class ClienteDaoImpl implements IClienteDao {
                 return new Cliente(
                         rs.getString("nome"),
                         rs.getString("cpf"),
-                        rs.getString("email")
+                        rs.getString("email"),
+                        rs.getString("telefone")
                 );
             }
 
@@ -88,13 +91,13 @@ public class ClienteDaoImpl implements IClienteDao {
             System.err.println("Erro ao buscar cliente: " + e.getMessage());
         }
 
-        return null; // não encontrado
+        return null;
     }
 
     @Override
     public List<Cliente> listarTodos() {
         List<Cliente> clientes = new ArrayList<>();
-        String sql = "SELECT nome, cpf, email FROM cliente";
+        String sql = "SELECT nome, cpf, email, telefone FROM cliente";
 
         try (Connection conn = ConexaoBanco.obterConexao();
              Statement stmt = conn.createStatement();
@@ -104,7 +107,8 @@ public class ClienteDaoImpl implements IClienteDao {
                 clientes.add(new Cliente(
                         rs.getString("nome"),
                         rs.getString("cpf"),
-                        rs.getString("email")
+                        rs.getString("email"),
+                        rs.getString("telefone")
                 ));
             }
 

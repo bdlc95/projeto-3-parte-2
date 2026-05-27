@@ -21,10 +21,10 @@ class NotaFiscalServiceTest {
     }
 
     private NotaFiscal criarNotaFiscal(String numero) {
-        Cliente cliente = new Cliente("Bruno", "123.456.789-00", "bruno@email.com");
+        Cliente cliente = new Cliente("Bruno", "123.456.789-00", "bruno@email.com", "(11) 98888-7777");
         List<Produto> produtos = List.of(
-                new Produto("Notebook", 3500.00),
-                new Produto("Mouse", 150.00)
+                new Produto("Notebook", 3500.00, "Dell"),
+                new Produto("Mouse", 150.00, "Logitech")
         );
         return new NotaFiscal(numero, cliente, produtos);
     }
@@ -68,5 +68,14 @@ class NotaFiscalServiceTest {
         service.salvar(criarNotaFiscal("NF-002"));
         List<NotaFiscal> notas = service.listarTodos();
         assertEquals(2, notas.size());
+    }
+
+    @Test
+    void deveValidarMarcaDoProduto() {
+        NotaFiscal nota = criarNotaFiscal("NF-001");
+        service.salvar(nota);
+        NotaFiscal encontrada = service.buscarPorNumero("NF-001");
+        assertNotNull(encontrada);
+        assertEquals("Dell", encontrada.getProdutos().get(0).getMarca());
     }
 }
