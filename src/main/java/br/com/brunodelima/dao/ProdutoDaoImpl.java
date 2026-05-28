@@ -28,7 +28,6 @@ public class ProdutoDaoImpl implements IProdutoDao {
                 produtoId = rs.getInt("id");
             }
 
-            // toda vez que cadastrar produto, já entra no estoque com quantidade 0
             try (PreparedStatement stmt = conn.prepareStatement(sqlEstoque)) {
                 stmt.setInt(1, produtoId);
                 stmt.executeUpdate();
@@ -40,6 +39,82 @@ public class ProdutoDaoImpl implements IProdutoDao {
         } catch (SQLException e) {
             return "Erro ao salvar produto: " + e.getMessage();
         }
+    }
+
+    @Override
+    public String atualizar(Produto produto) {
+        String sql = "UPDATE produto SET preco = ?, marca = ? WHERE nome = ?";
+
+        try (Connection conn = ConexaoBanco.obterConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDouble(1, produto.getPreco());
+            stmt.setString(2, produto.getMarca());
+            stmt.setString(3, produto.getNome());
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) return "Nenhum produto encontrado com nome: " + produto.getNome();
+            return "Produto atualizado com sucesso: " + produto.getNome();
+
+        } catch (SQLException e) {
+            return "Erro ao atualizar produto: " + e.getMessage();
+        }
+    }
+
+    @Override
+    public String excluir(String nome) {
+        String sqlEstoque = "DELETE FROM estoque WHERE produto_id = (SELECT id FROM produto WHERE nome = ?)";
+        String sqlProduto = "DELETE FROM produto WHERE nome = ?";
+
+        try (Connection conn = ConexaoBanco.obterConexao()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement stmt = conn.prepareStatement(sqlEstoque)) {
+                stmt.setString(1, nome);
+                stmt.executeUpdate();
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sqlProduto)) {
+                stmt.setString(1, nome);
+                int linhasAfetadas = stmt.executeUpdate();
+                if (linhasAfetadas == 0) {
+                    conn.rollback();
+                    return "Nenhum produto encontrado com nome: " + nome;
+                }
+            }
+
+            conn.commit();
+            return "Produto excluído com sucesso.";
+
+        } catch (SQLException e) {
+            return "Erro ao excluir produto: " + e.getMessage();
+        }
+    }
+
+    @Override
+    public Produto buscarPorNome(String nome) {
+        String sql = "SELECT nome, preco, marca FROM produto WHERE nome = ?";
+
+        try (Connection conn = ConexaoBanco.obterConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nome);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Produto(
+                        rs.getString("nome"),
+                        rs.getDouble("preco"),
+                        rs.getString("marca")
+                );
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar produto: " + e.getMessage());
+        }
+
+        return null;
     }
 
     @Override
